@@ -1,3 +1,4 @@
+from collections import namedtuple
 import xml.etree.ElementTree as ET
 import xml.parsers.expat
 from .loggers import getLogger
@@ -9,35 +10,52 @@ logger = getLogger(__name__)
 class SOAPParserError(Exception):
     pass
 
-class WSDLElement(object):
-    def __init__(self):
-        self.namespaces = []
 
+class SoapElement(dict):
+    """
+    Soap Element..
+    """
+    def __init__(self, **kwargs):
+        dict.__init__(self,kwargs)
+        self.__dict__ = self
 
 class SOAPParser(object):
     """
     SOAP Parser...
     """
-    def __init__(self, wsdl_file):
+    binding_tag = '{http://schemas.xmlsoap.org/wsdl/}binding'
+
+    def __init__(self, wsdl_file, soap_version):
+        self.soap = SoapElement(namespaces=[])
         self.wsdl_file = wsdl_file
-        self.happy_parser()
+        self._happy_parser()
 
-    def happy_parser(self):
-        wsdl = WSDLElement()
+    def _binding_parser(self, element):
+        """
+        Binding Parser...
+        """
+        logger.warning('Element -->%s', element.__dict__ )
+        for element in element._children:
+            logger.info('::::::::: ::::::::: ::::::::')
 
-        for event, element in ET.iterparse(self.wsdl_file, events=('start-ns', 'end')):
-            logger.debug('event -->%s, element -->%s', event, element)
+    def _happy_parser(self):
+        soap = self.soap
+
+        for event, element in ET.iterparse(self.wsdl_file, events=('start-ns', 'end', 'end-ns')):
+
             if event == 'start-ns':
-                wsdl.namespaces.append(element)
+                soap.namespaces.append(element)
 
-        logger.info('Namespaces -->%s', wsdl.namespaces)
+            if event == "end":
+                # todo
+                if element.tag == self.binding_tag:
+                    self._binding_parser(element)
 
+    def get_soap_element(self):
+        return self.soap
 
 def start_element(name, attrs):
     nm = Element(QName(name))
-    logger.debug('QNAME DICT--> %s', nm.__dict__)
-
-    attrs = attrs or {'NADA': 'NADA'}
     logger.info('Start --> %s,  %s', name, attrs)
     logger.info('Start <--> %s,  %s', type(name), type(attrs))
 
@@ -49,7 +67,6 @@ def end_element(tag):
     return tag
 
 def char_data(text):
-    logger.debug('Type of QData --> %s', text)
     logger.info('Data --> %s', repr(text))
     return text
 

@@ -14,7 +14,8 @@ class Client(object):
     """
     http = HTTPClient()
 
-    def __init__(self, wsdl=None, parser=None):
+    def __init__(self, wsdl=None, parser=None, soap_version="1.1"):
+        self.soap_version = soap_version or self.soap_version
         self.wsdl_location = wsdl or self.wsdl
 
         if parser is None:
@@ -51,6 +52,5 @@ class Client(object):
         raise SoapClientError('Error reading WSDL..')
 
     def _call(self):
-        self.soap = self.parser(self._get_wsdl())
-
+        self.soap = self.parser(self._get_wsdl(), self.soap_version).get_soap_element()
         return True
