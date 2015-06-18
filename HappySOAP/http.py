@@ -1,9 +1,5 @@
 # -*- coding: utf8 -*-
-
-from StringIO import StringIO
 import urllib
-from xml.etree import ElementTree as ET
-import urlparse
 
 from . import getLogger
 
@@ -15,41 +11,26 @@ class HTTPError(Exception):
 class HTTPClient(object):
     user_agent = "Happy SOAP (from http://nicolasmendoza.org/happy-SOAP/) "
 
-    def __init__(self, url, **kwargs):
-        self.url = url
-        self.scheme, self.netloc, self.uri, self.params, self.query, self.fragment = urlparse.urlparse(self.url)
+    def __init__(self,**kwargs):
+        pass
 
-        logger.info(
-            'Scheme --> %s, '
-            'host --> %s, '
-            'url --> %s, '
-            'params --> %s, '
-            'query --> %s, fragment: %s', self.scheme, self.netloc, self.uri, self.params, self.query, self.fragment)
+    def open_url(self, url):
+        """
+        Open a simple URL....
+        :param url:
+        :return:
+        """
 
-        if kwargs:
-            logger.info('kwargs -->%s', kwargs)
+        response = urllib.urlopen(url)
 
-    def read_wsdl(self):
-        try:
-            if self.query == 'wsdl':
-                logger.info('WSDL present..')
-            else:
-                logger.warning('Missed WSDL path in your URL..trying resolve adding ?wsdl query')
-                self.url += '?wsdl'
+        if response.code != 200:
+                logger.debug('Error opening WSDL Status: %i', response.code)
 
-            wsdl = urllib.urlopen(self.url).read()
+                raise HTTPError(
+                    '[WSDL] Error opening webservice description, HTTP code:{0} , url:{1}'.format(
+                        response.code,
+                        self.url
+                    )
+                )
 
-            _file = StringIO(wsdl)
-
-            namespaces = []
-
-            for event, element in ET.iterparse(_file, events=('start-ns','end')):
-                logger.debug('event -->%s, element -->%s', event, element)
-
-                if event == 'start-ns':
-                    namespaces.append(element)
-
-            logger.info('Namespaces -->%s', namespaces)
-
-        except IOError:
-            raise HTTPError("Cannot open WSDL, please verify that WSDl url is valid -->" + self.url)
+        return response
