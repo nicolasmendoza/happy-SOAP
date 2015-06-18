@@ -1,8 +1,11 @@
+# -*- coding: utf8 -*-
+
+from StringIO import StringIO
 import urllib
+from xml.etree import ElementTree as ET
 import urlparse
 
 from . import getLogger
-import requests
 
 logger = getLogger(__name__)
 
@@ -36,7 +39,17 @@ class HTTPClient(object):
 
             wsdl = urllib.urlopen(self.url).read()
 
-            logger.info("WSDL Data --> %s", wsdl)
+            _file = StringIO(wsdl)
+
+            namespaces = []
+
+            for event, element in ET.iterparse(_file, events=('start-ns','end')):
+                logger.debug('event -->%s, element -->%s', event, element)
+
+                if event == 'start-ns':
+                    namespaces.append(element)
+
+            logger.info('Namespaces -->%s', namespaces)
 
         except IOError:
             raise HTTPError("Cannot open WSDL, please verify that WSDl url is valid -->" + self.url)
