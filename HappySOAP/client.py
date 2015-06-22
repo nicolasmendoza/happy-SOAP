@@ -43,8 +43,8 @@ class Client(object):
 
         try:
             response = wsdl_string_response.read()
-            _file = StringIO(response)
-            return _file
+
+            return response
 
         except IOError:
             raise SoapClientError("Cannot open WSDL, please verify that WSDl url is valid -->" + self.url)
@@ -52,5 +52,5 @@ class Client(object):
         raise SoapClientError('Error reading WSDL..')
 
     def _call(self):
-        self.soap = self.parser(self._get_wsdl(), self.soap_version).get_soap_element()
+        self.soap = self.parser(self._get_wsdl(), self.soap_version).get_api_soap()
         return True

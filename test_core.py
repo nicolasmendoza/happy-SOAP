@@ -7,7 +7,7 @@ logger = getLogger(__name__)
 
 class HTTPClientTest(TestCase):
     def setUp(self):
-        pass
+        self.api_url = 'https://api-citas.buenosaires.gob.ar'
 
     def test_http_connection(self):
 
@@ -16,5 +16,3 @@ class HTTPClientTest(TestCase):
 
         for url in ws:
             client = Client(wsdl=url)
-            logger.debug("WSDL namespaces --> %s", client.soap.namespaces)
-
